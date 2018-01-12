@@ -80,6 +80,7 @@ const performWork = (team) => {
 
 const processFinishedWork = (team) => {
   team.assigned.forEach(assignment => {
+    team.libs.stories.updateStoryPriority(assignment.story)
     if (!assignment.story.tasks.some(task => task.remaining > 0)) {
       team.libs.queues.removeStoryFromQueue(assignment.story, team.inProgressQueue)
       team.unassigned = team.unassigned.concat(assignment.devs)
@@ -92,6 +93,7 @@ const processFinishedWork = (team) => {
   })
 
   team.assigned = team.assigned.filter(x => x.devs.length > 0)
+  team.libs.queues.prioritizeQueue(team.inProgressQueue)
 }
 
 module.exports = {

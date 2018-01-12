@@ -6,7 +6,7 @@ const stories = require('../src/stories')
 const queues = require('../src/queues')
 const assert = require('assert')
 
-const libs = {devs, queues}
+const libs = {devs, queues, stories}
 
 const createStoryWithPriority = (priority, config) => {
  let story = stories.newStory(config)
@@ -388,10 +388,12 @@ describe('teams', () => {
       story1.tasks[0].remaining = 0
       story1.tasks[1].remaining = 1
       story2 = stories.newStory(config)
+      story2.value = 2
       story2.priority = 5
       story2.tasks[0].remaining = 2
       story2.tasks[1].remaining = 1
       story3 = stories.newStory(config)
+      story3.value = 3
       story3.priority = 2
       story3.tasks[0].remaining = 0
       story3.tasks[1].remaining = 2
@@ -403,8 +405,8 @@ describe('teams', () => {
       teams.processFinishedWork(team)
     })
 
-    it('should remove the finished stories from the inProgress queue', () => {
-      assert.deepEqual(team.inProgressQueue, [story2, story3])
+    it('should remove the finished stories from the inProgress queue and reprioritize', () => {
+      assert.deepEqual(team.inProgressQueue, [story3, story2])
     })
 
     it('should unassign developers from stories with finished work', () => {
@@ -413,6 +415,14 @@ describe('teams', () => {
 
     it('should update the assignments', () => {
       assert.deepEqual(team.assigned, [{story: story2, devs: [team.devs[2], team.devs[3]]}])
+    })
+
+    it('should update story2 priority', () => {
+      assert.equal(story2.priority, story2.value)
+    })
+
+    it('should update story3 priority', () => {
+      assert.equal(story3.priority, story3.value)
     })
   })
 })
