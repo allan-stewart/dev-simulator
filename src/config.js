@@ -11,7 +11,8 @@ const getStandardConfig = (random) => {
     },
     devs: {
       nextId: 1,
-      count: 4
+      count: 4,
+      collaboration: 'solo'
     },
     queues: {
       ready: {

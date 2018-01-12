@@ -8,6 +8,12 @@ const assert = require('assert')
 
 const libs = {devs, queues}
 
+const createStoryWithPriority = (priority, config) => {
+ let story = stories.newStory(config)
+ story.priority = priority
+ return story
+}
+
 describe('teams', () => {
   describe('initializeTeam()', () => {
     let team
@@ -57,19 +63,176 @@ describe('teams', () => {
       const config = configs.getStandardConfig(random)
       config.queues.ready.wipLimit = 2
       const team = teams.initializeTeam(config, libs)
-      const story1 = stories.newStory(config)
-      const story2 = stories.newStory(config)
-      const story3 = stories.newStory(config)
-
-      story1.priority = 5
-      story2.priority = 7
-      story3.priority = 10
+      const story1 = createStoryWithPriority(5, config)
+      const story2 = createStoryWithPriority(7, config)
+      const story3 = createStoryWithPriority(10, config)
 
       teams.addStoryToReadyQueue(story1, team)
       teams.addStoryToReadyQueue(story2, team)
       teams.addStoryToReadyQueue(story3, team)
 
       assert.deepEqual(team.readyQueue, [story3, story2])
+    })
+  })
+
+  describe('assignWork()', () => {
+    describe('when working solo', () => {
+      it('should pull work from the ready queue as needed', () => {
+        const team = teams.initializeTeam(configs.getStandardConfig(random), libs)
+        const stories = [
+          createStoryWithPriority(3, team.config),
+          createStoryWithPriority(2, team.config),
+          createStoryWithPriority(1, team.config),
+          createStoryWithPriority(0, team.config)
+        ]
+        stories.forEach(story => teams.addStoryToReadyQueue(story, team))
+  
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [])
+        assert.deepEqual(team.inProgressQueue, stories)
+        assert.deepEqual(team.unassigned, [])
+        assert.deepEqual(team.assigned, [
+          {story: stories[0], devs: [team.devs[0]]},
+          {story: stories[1], devs: [team.devs[1]]},
+          {story: stories[2], devs: [team.devs[2]]},
+          {story: stories[3], devs: [team.devs[3]]}
+        ])
+      })
+
+      it('should leave devs unassigned if there is not enough work', () => {
+        const team = teams.initializeTeam(configs.getStandardConfig(random), libs)
+        const stories = [
+          createStoryWithPriority(0, team.config),
+          createStoryWithPriority(1, team.config)
+        ]
+        stories.forEach(story => teams.addStoryToReadyQueue(story, team))
+  
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [])
+        assert.deepEqual(team.inProgressQueue, stories.concat().reverse())
+        assert.deepEqual(team.unassigned, [team.devs[2], team.devs[3]])
+        assert.deepEqual(team.assigned, [
+          {story: stories[1], devs: [team.devs[0]]},
+          {story: stories[0], devs: [team.devs[1]]}
+        ])
+      })
+
+      it('should assign unfinished inProgress stories first', () => {
+        const team = teams.initializeTeam(configs.getStandardConfig(random), libs)
+        const stories = [
+          createStoryWithPriority(0, team.config),
+          createStoryWithPriority(1, team.config)
+        ]
+        stories.forEach(story => teams.addStoryToReadyQueue(story, team))
+        const inProgressStory = createStoryWithPriority(2, team.config)
+        team.inProgressQueue.push(inProgressStory)
+  
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [])
+        assert.deepEqual(team.inProgressQueue, [inProgressStory, stories[1], stories[0]])
+        assert.deepEqual(team.unassigned, [team.devs[3]])
+        assert.deepEqual(team.assigned, [
+          {story: inProgressStory, devs: [team.devs[0]]},
+          {story: stories[1], devs: [team.devs[1]]},
+          {story: stories[0], devs: [team.devs[2]]}
+        ])
+      })
+
+      it('should not change existing assignments', () => {
+        const team = teams.initializeTeam(configs.getStandardConfig(random), libs)
+        const story1 = createStoryWithPriority(1, team.config)
+        const story2 = createStoryWithPriority(2, team.config)
+        const story3 = createStoryWithPriority(3, team.config)
+        
+        teams.addStoryToReadyQueue(story1, team)
+        teams.addStoryToReadyQueue(story2, team)
+        teams.assignWork(team)
+        teams.addStoryToReadyQueue(story3, team)
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [])
+        assert.deepEqual(team.inProgressQueue, [story3, story2, story1])
+        assert.deepEqual(team.unassigned, [team.devs[3]])
+        assert.deepEqual(team.assigned, [
+          {story: story2, devs: [team.devs[0]]},
+          {story: story1, devs: [team.devs[1]]},
+          {story: story3, devs: [team.devs[2]]}
+        ])
+      })
+    })
+
+    describe('when pairing', () => {
+      it('should assign work in pairs', () => {
+        const team = teams.initializeTeam(configs.getStandardConfig(random), libs)
+        team.config.devs.collaboration = 'pair'
+        const stories = [
+          createStoryWithPriority(2, team.config),
+          createStoryWithPriority(1, team.config),
+          createStoryWithPriority(0, team.config)
+        ]
+        stories.forEach(story => teams.addStoryToReadyQueue(story, team))
+  
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [stories[2]])
+        assert.deepEqual(team.inProgressQueue, [stories[0], stories[1]])
+        assert.deepEqual(team.unassigned, [])
+        assert.deepEqual(team.assigned, [
+          {story: stories[0], devs: [team.devs[0], team.devs[1]]},
+          {story: stories[1], devs: [team.devs[2], team.devs[3]]}
+        ])
+      })
+
+      it('should assign a solo person if there is an odd number of devs', () => {
+        const config = configs.getStandardConfig(random)
+        config.devs.collaboration = 'pair'
+        config.devs.count = 5
+        const team = teams.initializeTeam(config, libs)
+        const stories = [
+          createStoryWithPriority(2, team.config),
+          createStoryWithPriority(1, team.config),
+          createStoryWithPriority(0, team.config)
+        ]
+        stories.forEach(story => teams.addStoryToReadyQueue(story, team))
+  
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [])
+        assert.deepEqual(team.inProgressQueue, stories)
+        assert.deepEqual(team.unassigned, [], 'incorrect unassigned users')
+        assert.deepEqual(team.assigned, [
+          {story: stories[0], devs: [team.devs[0], team.devs[1]]},
+          {story: stories[1], devs: [team.devs[2], team.devs[3]]},
+          {story: stories[2], devs: [team.devs[4]]}
+        ])
+      })
+    })
+
+    describe('when mobbing', () => {
+      it('should assign the whole team to one story', () => {
+        const config = configs.getStandardConfig(random)
+        config.devs.collaboration = 'mob'
+        config.devs.count = 3
+        const team = teams.initializeTeam(config, libs)
+        const stories = [
+          createStoryWithPriority(2, team.config),
+          createStoryWithPriority(1, team.config),
+          createStoryWithPriority(0, team.config)
+        ]
+        stories.forEach(story => teams.addStoryToReadyQueue(story, team))
+  
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [stories[1], stories[2]])
+        assert.deepEqual(team.inProgressQueue, [stories[0]])
+        assert.deepEqual(team.unassigned, [], 'incorrect unassigned users')
+        assert.deepEqual(team.assigned, [
+          {story: stories[0], devs: team.devs}
+        ])
+      })
     })
   })
 })

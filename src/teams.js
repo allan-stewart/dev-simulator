@@ -29,7 +29,44 @@ const addStoryToReadyQueue = (story, team) => {
   }
 }
 
+const assignWork = (team) => {
+  assignInProgressWork(team)
+  pullWorkFromReadyQueue(team)
+}
+
+const assignInProgressWork = (team) => {
+  const stories = team.inProgressQueue.filter(story => {
+    return !team.assigned.some(assignment => assignment.story == story)
+  })
+  while (team.unassigned.length > 0 && stories.length > 0) {
+    const devs = getDevsForAssignment(team)
+    const story = stories.shift()
+    team.assigned.push({story, devs})
+  }
+}
+
+const getDevsForAssignment = (team) => {
+  if (team.config.devs.collaboration == 'mob') {
+    team.unassigned = []
+    return team.devs
+  }
+  if (team.config.devs.collaboration == 'pair') {
+    return team.unassigned.length > 1 ? [team.unassigned.shift(), team.unassigned.shift()] : [team.unassigned.shift()]
+  }
+  return [team.unassigned.shift()]
+}
+
+const pullWorkFromReadyQueue = (team) => {
+  while (team.unassigned.length > 0 && team.readyQueue.length > 0) {
+    const devs = getDevsForAssignment(team)
+    const story = team.readyQueue.shift()
+    team.assigned.push({story, devs})
+    team.libs.queues.addStoryToQueue(story, team.inProgressQueue)
+  }
+}
+
 module.exports = {
   initializeTeam,
-  addStoryToReadyQueue
+  addStoryToReadyQueue,
+  assignWork
 }
