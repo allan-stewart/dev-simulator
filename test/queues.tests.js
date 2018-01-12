@@ -35,4 +35,21 @@ describe('queues', () => {
       assert.deepEqual(queue, [story3, story2, story4, story1])
     })
   })
+
+  describe('prioritizeQueue()', () => {
+    it('should sort the queue into priority order', () => {
+      const story1 = stories.newStory(config)
+      const story2 = stories.newStory(config)
+      const story3 = stories.newStory(config)
+
+      story1.priority = 5
+      story2.priority = 10
+      story3.priority = 7
+
+      const queue = [story1, story2, story3]
+      queues.prioritizeQueue(queue)
+
+      assert.deepEqual(queue, [story2, story3, story1])
+    })
+  })
 })
