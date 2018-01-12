@@ -57,7 +57,8 @@ const getDevsForAssignment = (team) => {
 }
 
 const pullWorkFromReadyQueue = (team) => {
-  while (team.unassigned.length > 0 && team.readyQueue.length > 0) {
+  const wipLimit = team.config.queues.inProgress.wipLimit;
+  while (team.unassigned.length > 0 && team.readyQueue.length > 0 && (wipLimit == 0 || team.inProgressQueue.length < wipLimit)) {
     const devs = getDevsForAssignment(team)
     const story = team.readyQueue.shift()
     team.assigned.push({story, devs})

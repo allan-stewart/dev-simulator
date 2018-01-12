@@ -100,6 +100,29 @@ describe('teams', () => {
         ])
       })
 
+      it('should NOT pull work after hitting the inProgress wip limit', () => {
+        const config = configs.getStandardConfig(random)
+        config.queues.inProgress.wipLimit = 2
+        const team = teams.initializeTeam(config, libs)
+        const stories = [
+          createStoryWithPriority(3, team.config),
+          createStoryWithPriority(2, team.config),
+          createStoryWithPriority(1, team.config),
+          createStoryWithPriority(0, team.config)
+        ]
+        stories.forEach(story => teams.addStoryToReadyQueue(story, team))
+  
+        teams.assignWork(team)
+  
+        assert.deepEqual(team.readyQueue, [stories[2], stories[3]])
+        assert.deepEqual(team.inProgressQueue, [stories[0], stories[1]])
+        assert.deepEqual(team.unassigned, [team.devs[2], team.devs[3]])
+        assert.deepEqual(team.assigned, [
+          {story: stories[0], devs: [team.devs[0]]},
+          {story: stories[1], devs: [team.devs[1]]}
+        ])
+      })
+
       it('should leave devs unassigned if there is not enough work', () => {
         const team = teams.initializeTeam(configs.getStandardConfig(random), libs)
         const stories = [
