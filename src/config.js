@@ -11,6 +11,14 @@ const getStandardConfig = (random) => {
     },
     devs: {
       nextId: 1
+    },
+    queues: {
+      ready: {
+        wipLimit: 0
+      },
+      inProgress: {
+        wipLimit: 0
+      }
     }
   }
 }
