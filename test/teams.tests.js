@@ -6,6 +6,8 @@ const stories = require('../src/stories')
 const queues = require('../src/queues')
 const assert = require('assert')
 
+const libs = {devs, queues}
+
 describe('teams', () => {
   describe('initializeTeam()', () => {
     let team
@@ -13,7 +15,7 @@ describe('teams', () => {
 
     before(() => {
       config = configs.getStandardConfig(random)
-      team = teams.initializeTeam(config, devs.createDev)
+      team = teams.initializeTeam(config, libs)
     })
 
     it('should contain the config', () => {
@@ -44,17 +46,17 @@ describe('teams', () => {
   describe('addStoryToReadyQueue', () => {
     it('should add the story to an empty ready queue', () => {
       const config = configs.getStandardConfig(random)
-      const team = teams.initializeTeam(config, devs.createDev)
+      const team = teams.initializeTeam(config, libs)
       const story = stories.newStory(config)
 
-      teams.addStoryToReadyQueue(story, team, queues.addStoryToQueue)
+      teams.addStoryToReadyQueue(story, team)
       assert.deepEqual(team.readyQueue, [story])
     })
 
     it('should drop the lowest priority story if the a WIP limit is set', () => {
       const config = configs.getStandardConfig(random)
       config.queues.ready.wipLimit = 2
-      const team = teams.initializeTeam(config, devs.createDev)
+      const team = teams.initializeTeam(config, libs)
       const story1 = stories.newStory(config)
       const story2 = stories.newStory(config)
       const story3 = stories.newStory(config)
@@ -63,9 +65,9 @@ describe('teams', () => {
       story2.priority = 7
       story3.priority = 10
 
-      teams.addStoryToReadyQueue(story1, team, queues.addStoryToQueue)
-      teams.addStoryToReadyQueue(story2, team, queues.addStoryToQueue)
-      teams.addStoryToReadyQueue(story3, team, queues.addStoryToQueue)
+      teams.addStoryToReadyQueue(story1, team)
+      teams.addStoryToReadyQueue(story2, team)
+      teams.addStoryToReadyQueue(story3, team)
 
       assert.deepEqual(team.readyQueue, [story3, story2])
     })

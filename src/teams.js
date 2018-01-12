@@ -1,7 +1,8 @@
-const initializeTeam = (config, createDev) => {
-  const devs = createDevs(config, createDev)
+const initializeTeam = (config, libs) => {
+  const devs = createDevs(config, libs.devs.createDev)
   return {
     config,
+    libs,
     readyQueue: [],
     inProgressQueue: [],
     devs,
@@ -20,8 +21,8 @@ const createDevs = (config, createDev) => {
   return devs
 }
 
-const addStoryToReadyQueue = (story, team, addStoryToQueue) => {
-  addStoryToQueue(story, team.readyQueue)
+const addStoryToReadyQueue = (story, team) => {
+  team.libs.queues.addStoryToQueue(story, team.readyQueue)
   const wipLimit = team.config.queues.ready.wipLimit
   if (wipLimit > 0 && team.readyQueue.length > wipLimit) {
     team.readyQueue = team.readyQueue.slice(0, wipLimit)
