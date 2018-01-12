@@ -286,7 +286,7 @@ describe('teams', () => {
         story1.tasks[0].remaining = 3
         story1.tasks[1].remaining = 2
         story2 = stories.newStory(config)
-        story1.priority = 5
+        story2.priority = 5
         story2.tasks[0].remaining = 0
         story2.tasks[1].remaining = .7
         teams.addStoryToReadyQueue(story1, team)
@@ -325,7 +325,7 @@ describe('teams', () => {
         story1.tasks[0].remaining = 3
         story1.tasks[1].remaining = 2
         story2 = stories.newStory(config)
-        story1.priority = 5
+        story2.priority = 5
         story2.tasks[0].remaining = 0
         story2.tasks[1].remaining = .7
         teams.addStoryToReadyQueue(story1, team)
@@ -349,6 +349,47 @@ describe('teams', () => {
       it('should NOT story 2 code review remaining', () => {
         assert.equal(story2.tasks[1].remaining, .7)
       })
+    })
+  })
+
+  describe('processFinishedWork()', () => {
+    let config, team, story1, story2
+    
+    beforeEach(() => {
+      config = configs.getStandardConfig(random)
+      config.devs.collaboration = 'pair'
+      config.devs.count = 5
+      team = teams.initializeTeam(config, libs)
+      story1 = stories.newStory(config)
+      story1.priority = 10
+      story1.tasks[0].remaining = 0
+      story1.tasks[1].remaining = 1
+      story2 = stories.newStory(config)
+      story2.priority = 5
+      story2.tasks[0].remaining = 2
+      story2.tasks[1].remaining = 1
+      story3 = stories.newStory(config)
+      story3.priority = 2
+      story3.tasks[0].remaining = 0
+      story3.tasks[1].remaining = 1
+      teams.addStoryToReadyQueue(story1, team)
+      teams.addStoryToReadyQueue(story2, team)
+      teams.addStoryToReadyQueue(story3, team)
+      teams.assignWork(team)
+      teams.performWork(team)
+      teams.processFinishedWork(team)
+    })
+
+    it('should remove the finished stories from the inProgress queue', () => {
+      assert.deepEqual(team.inProgressQueue, [story2])
+    })
+
+    it('should unassign developers from finished stories', () => {
+      assert.deepEqual(team.unassigned, [team.devs[0], team.devs[1], team.devs[4]])
+    })
+
+    it('should update the assignments', () => {
+      assert.deepEqual(team.assigned, [{story: story2, devs: [team.devs[2], team.devs[3]]}])
     })
   })
 })

@@ -77,9 +77,22 @@ const performWork = (team) => {
   })
 }
 
+const processFinishedWork = (team) => {
+  team.assigned.forEach(assignment => {
+    if (!assignment.story.tasks.some(task => task.remaining > 0)) {
+      team.libs.queues.removeStoryFromQueue(assignment.story, team.inProgressQueue)
+      team.unassigned = team.unassigned.concat(assignment.devs)
+      assignment.devs = []
+    }
+  })
+
+  team.assigned = team.assigned.filter(x => x.devs.length > 0)
+}
+
 module.exports = {
   initializeTeam,
   addStoryToReadyQueue,
   assignWork,
-  performWork
+  performWork,
+  processFinishedWork
 }
