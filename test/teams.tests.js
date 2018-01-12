@@ -47,6 +47,10 @@ describe('teams', () => {
     it('should have no assigned work', () => {
       assert.deepEqual(team.assigned, [])
     })
+
+    it('should have no completed stories', () => {
+      assert.deepEqual(team.completedStories, [])
+    })
   })
 
   describe('addStoryToReadyQueue', () => {
@@ -423,6 +427,10 @@ describe('teams', () => {
 
     it('should update story3 priority', () => {
       assert.equal(story3.priority, story3.value)
+    })
+
+    it('should update the completed stories', () => {
+      assert.deepEqual(team.completedStories, [story1])
     })
   })
 })

@@ -5,6 +5,7 @@ const initializeTeam = (config, libs) => {
     libs,
     readyQueue: [],
     inProgressQueue: [],
+    completedStories: [],
     devs,
     unassigned: devs.concat(),
     assigned: []
@@ -85,6 +86,7 @@ const processFinishedWork = (team) => {
       team.libs.queues.removeStoryFromQueue(assignment.story, team.inProgressQueue)
       team.unassigned = team.unassigned.concat(assignment.devs)
       assignment.devs = []
+      team.completedStories.push(assignment.story)
     }
     else if (assignment.story.tasks[0].remaining == 0) {
       team.unassigned = team.unassigned.concat(assignment.devs)
