@@ -10,7 +10,8 @@ const getStandardConfig = (random) => {
       codeReviewMultiplier: .1
     },
     devs: {
-      nextId: 1
+      nextId: 1,
+      count: 4
     },
     queues: {
       ready: {
