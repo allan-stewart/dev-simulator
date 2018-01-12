@@ -84,6 +84,10 @@ const processFinishedWork = (team) => {
       team.unassigned = team.unassigned.concat(assignment.devs)
       assignment.devs = []
     }
+    else if (assignment.story.tasks[0].remaining == 0) {
+      team.unassigned = team.unassigned.concat(assignment.devs)
+      assignment.devs = []
+    }
   })
 
   team.assigned = team.assigned.filter(x => x.devs.length > 0)

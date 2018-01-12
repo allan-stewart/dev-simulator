@@ -371,7 +371,7 @@ describe('teams', () => {
       story3 = stories.newStory(config)
       story3.priority = 2
       story3.tasks[0].remaining = 0
-      story3.tasks[1].remaining = 1
+      story3.tasks[1].remaining = 2
       teams.addStoryToReadyQueue(story1, team)
       teams.addStoryToReadyQueue(story2, team)
       teams.addStoryToReadyQueue(story3, team)
@@ -381,10 +381,10 @@ describe('teams', () => {
     })
 
     it('should remove the finished stories from the inProgress queue', () => {
-      assert.deepEqual(team.inProgressQueue, [story2])
+      assert.deepEqual(team.inProgressQueue, [story2, story3])
     })
 
-    it('should unassign developers from finished stories', () => {
+    it('should unassign developers from stories with finished work', () => {
       assert.deepEqual(team.unassigned, [team.devs[0], team.devs[1], team.devs[4]])
     })
 
