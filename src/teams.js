@@ -65,8 +65,21 @@ const pullWorkFromReadyQueue = (team) => {
   }
 }
 
+const performWork = (team) => {
+  team.assigned.forEach(assignment => {
+    let workRemaining = assignment.story.tasks[0].remaining
+    assignment.story.tasks[0].remaining = Math.max(0, workRemaining - 1)
+ 
+    if (workRemaining == 0 || assignment.devs.length > 1) {
+      let reviewRemaining = assignment.story.tasks[1].remaining
+      assignment.story.tasks[1].remaining = Math.max(0, reviewRemaining - 1)
+    }
+  })
+}
+
 module.exports = {
   initializeTeam,
   addStoryToReadyQueue,
-  assignWork
+  assignWork,
+  performWork
 }

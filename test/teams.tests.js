@@ -235,4 +235,120 @@ describe('teams', () => {
       })
     })
   })
+  
+  describe('performWork()', () => {
+    describe('when working solo', () => {
+      let config, team, story1, story2
+
+      beforeEach(() => {
+        config = configs.getStandardConfig(random)
+        config.devs.count = 3
+        team = teams.initializeTeam(config, libs)
+        story1 = stories.newStory(config)
+        story1.tasks[0].remaining = 2
+        story1.tasks[1].remaining = 1
+        story2 = stories.newStory(config)
+        story2.tasks[0].remaining = 0
+        story2.tasks[1].remaining = .7
+        teams.addStoryToReadyQueue(story1, team)
+        teams.addStoryToReadyQueue(story2, team)
+        teams.assignWork(team)
+        teams.performWork(team)
+      })
+
+      it('should decrease story 1 work remaining by 1', () => {
+        assert.equal(story1.tasks[0].remaining, 1)
+      })
+
+      it('should NOT decrease story 1 code review remaining', () => {
+        assert.equal(story1.tasks[1].remaining, 1)
+      })
+
+      it('should NOT decrease story 2 work remaining below 0', () => {
+        assert.equal(story2.tasks[0].remaining, 0)
+      })
+
+      it('should decrease story 2 code review remaining', () => {
+        assert.equal(story2.tasks[1].remaining, 0)
+      })
+    })
+
+    describe('when working in a pair', () => {
+      let config, team, story1, story2
+
+      beforeEach(() => {
+        config = configs.getStandardConfig(random)
+        config.devs.collaboration = 'pair'
+        config.devs.count = 3
+        team = teams.initializeTeam(config, libs)
+        story1 = stories.newStory(config)
+        story1.priority = 10
+        story1.tasks[0].remaining = 3
+        story1.tasks[1].remaining = 2
+        story2 = stories.newStory(config)
+        story1.priority = 5
+        story2.tasks[0].remaining = 0
+        story2.tasks[1].remaining = .7
+        teams.addStoryToReadyQueue(story1, team)
+        teams.addStoryToReadyQueue(story2, team)
+        teams.assignWork(team)
+        teams.performWork(team)
+      })
+
+      it('should decrease story 1 work remaining by 1', () => {
+        assert.equal(story1.tasks[0].remaining, 2)
+      })
+
+      it('should decrease story 1 code review remaining', () => {
+        assert.equal(story1.tasks[1].remaining, 1)
+      })
+
+      it('should NOT decrease story 2 work remaining below 0', () => {
+        assert.equal(story2.tasks[0].remaining, 0)
+      })
+
+      it('should decrease story 2 code review remaining', () => {
+        assert.equal(story2.tasks[1].remaining, 0)
+      })
+    })
+
+    describe('when working in a mob', () => {
+      let config, team, story1, story2
+
+      beforeEach(() => {
+        config = configs.getStandardConfig(random)
+        config.devs.collaboration = 'mob'
+        config.devs.count = 3
+        team = teams.initializeTeam(config, libs)
+        story1 = stories.newStory(config)
+        story1.priority = 10
+        story1.tasks[0].remaining = 3
+        story1.tasks[1].remaining = 2
+        story2 = stories.newStory(config)
+        story1.priority = 5
+        story2.tasks[0].remaining = 0
+        story2.tasks[1].remaining = .7
+        teams.addStoryToReadyQueue(story1, team)
+        teams.addStoryToReadyQueue(story2, team)
+        teams.assignWork(team)
+        teams.performWork(team)
+      })
+
+      it('should decrease story 1 work remaining by 1', () => {
+        assert.equal(story1.tasks[0].remaining, 2)
+      })
+
+      it('should decrease story 1 code review remaining', () => {
+        assert.equal(story1.tasks[1].remaining, 1)
+      })
+
+      it('should NOT decrease story 2 work remaining', () => {
+        assert.equal(story2.tasks[0].remaining, 0)
+      })
+
+      it('should NOT story 2 code review remaining', () => {
+        assert.equal(story2.tasks[1].remaining, .7)
+      })
+    })
+  })
 })
