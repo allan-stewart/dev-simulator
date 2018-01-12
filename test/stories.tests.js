@@ -33,9 +33,28 @@ describe('stories', () => {
       assertInRange(story.tasks[0].duration, config.stories.minWork, config.stories.maxWork)
     })
 
+    it('should set the priority of the story', () => {
+      const totalRemaining = story.tasks.reduce((total, task) => total + task.remaining, 0)
+      const expectedPriority = story.value / totalRemaining
+      assert.equal(story.priority, expectedPriority)
+    })
+
     it('should set the ids of subsequent stories correctly', () => {
       assert.equal(stories.newStory(config).id, 'story-2')
       assert.equal(stories.newStory(config).id, 'story-3')
+    })
+  })
+
+  describe('updateStoryPriority', () => {
+    it('should update the priority of a story', () => {
+      const story = stories.newStory(config)
+      story.tasks[0].remaining = 0
+      story.tasks[1].remaining = 2
+
+      stories.updateStoryPriority(story)
+
+      const expectedPriority = story.value / 2
+      assert.equal(story.priority, expectedPriority)
     })
   })
 })
