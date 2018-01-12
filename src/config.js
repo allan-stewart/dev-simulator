@@ -8,6 +8,9 @@ const getStandardConfig = (random) => {
       minWork: 1,
       maxWork: 16,
       codeReviewMultiplier: .1
+    },
+    devs: {
+      nextId: 1
     }
   }
 }
