@@ -7,7 +7,8 @@ const getStandardConfig = (random) => {
       maxValue: 3,
       minWork: 1,
       maxWork: 16,
-      codeReviewMultiplier: .1
+      codeReviewMultiplier: .1,
+      newEvery: {min: 1, max: 5}
     },
     devs: {
       nextId: 1,
