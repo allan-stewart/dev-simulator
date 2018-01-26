@@ -30,7 +30,9 @@ const newStoriesMayArrive = (state) => {
   }
 }
 
-module.exports = {
+const runnerLib = {
   initialize,
   advance
 }
+
+module.exports = runnerLib

@@ -4,6 +4,8 @@ const createDev = (config) => {
   }
 }
 
-module.exports = {
+const devsLib = {
   createDev
 }
+
+module.exports = devsLib

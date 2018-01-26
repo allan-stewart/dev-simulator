@@ -21,7 +21,9 @@ const updateStoryPriority = (story) => {
   story.priority = story.value / remaining
 }
 
-module.exports = {
+const storiesLib = {
   newStory,
   updateStoryPriority
 }
+
+module.exports = storiesLib

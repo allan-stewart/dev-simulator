@@ -26,6 +26,8 @@ const getStandardConfig = (random) => {
   }
 }
 
-module.exports = {
+const configLib = {
   getStandardConfig
 }
+
+module.exports = configLib

@@ -14,8 +14,10 @@ const removeStoryFromQueue = (story, queue) => {
   }
 }
 
-module.exports = {
+const queuesLib = {
   addStoryToQueue,
   prioritizeQueue,
   removeStoryFromQueue
 }
+
+module.exports = queuesLib
