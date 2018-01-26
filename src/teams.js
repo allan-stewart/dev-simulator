@@ -69,14 +69,19 @@ const pullWorkFromReadyQueue = (team) => {
 
 const performWork = (team) => {
   team.assigned.forEach(assignment => {
+    let devMultipliers = assignment.devs.map(dev => getDevMultiplier(team.config.random))
+    let work = Math.max(...devMultipliers)
     let workRemaining = assignment.story.tasks[0].remaining
-    assignment.story.tasks[0].remaining = Math.max(0, workRemaining - 1)
+    assignment.story.tasks[0].remaining = Math.max(0, workRemaining - work)
  
     if (workRemaining == 0 || assignment.devs.length > 1) {
       let reviewRemaining = assignment.story.tasks[1].remaining
       assignment.story.tasks[1].remaining = Math.max(0, reviewRemaining - 1)
     }
   })
+}
+const getDevMultiplier = (random) => {
+  return Math.max(Math.random(), .01)
 }
 
 const processFinishedWork = (team) => {
@@ -98,10 +103,12 @@ const processFinishedWork = (team) => {
   team.libs.queues.prioritizeQueue(team.inProgressQueue)
 }
 
-module.exports = {
+const teamsLib = {
   initializeTeam,
   addStoryToReadyQueue,
   assignWork,
   performWork,
   processFinishedWork
 }
+
+module.exports = teamsLib
