@@ -92,7 +92,7 @@ const pullWorkFromReadyQueue = (team) => {
 
 const performWork = (team) => {
   team.assigned.forEach(assignment => {
-    let devMultipliers = assignment.devs.map(dev => getDevMultiplier(team.config.random))
+    let devMultipliers = assignment.devs.map(dev => getDevMultiplier(team.config.random, team.inProgressQueue.length))
     let work = Math.max(...devMultipliers)
     let task = assignment.story.tasks.find(x => !x.finished)
     task.remaining = Math.max(0, task.remaining - work)
@@ -103,8 +103,8 @@ const performWork = (team) => {
     }
   })
 }
-const getDevMultiplier = (random) => {
-  return Math.max(Math.random(), .01)
+const getDevMultiplier = (random, numberOfStoriesInQueue) => {
+  return Math.max(Math.random(), .01) / Math.max(numberOfStoriesInQueue, 1)
 }
 
 const processFinishedWork = (team) => {
