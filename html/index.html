@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <title>Dev Simulator</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <script>
+      let module = {}
+    </script>
+    <script src="../src/random.js"></script>
+    <script src="../src/config.js"></script>
+    <script src="../src/devs.js"></script>
+    <script src="../src/stories.js"></script>
+    <script src="../src/queues.js"></script>
+    <script src="../src/teams.js"></script>
+    <script src="../src/runner.js"></script>
+    <script>
+      // Bootstrap
+      const libs = { teams: teamsLib, stories: storiesLib, devs: devsLib, queues: queuesLib, random: randomLib }
+    </script>
+  </head>
+  <body>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <div id="workspace">
+      <div id="readyQueue" class="queue">
+        <div>Ready</div>
+      </div>
+      <div id="inProgressQueue" class="queue">
+        <div>In Progress</div>
+      </div>
+      <div id="completedList" class="queue">
+        <div>Completed</div>
+      </div>
+    </div>
+
+    <script>
+      const startButton = document.getElementById("start")
+      const stopButton = document.getElementById("stop")
+      const readyQueue = document.getElementById("readyQueue")
+      const inProgressQueue = document.getElementById("inProgressQueue")
+      const completedList = document.getElementById("completedList")
+
+      let runnerState
+      let config = configLib.getStandardConfig(randomLib)
+      let interval
+
+      startButton.onclick = (e) => {
+        if (!interval) {
+          startSimulation()
+        }
+      }
+
+      stopButton.onclick = (e) => {
+        if (interval) {
+          clearInterval(interval)
+          interval = null
+        }
+      }
+
+      const startSimulation = () => {
+        runnerState = runnerLib.initialize(config, libs)
+        interval = setInterval(advanceSimulation, 1000)
+        advanceSimulation()
+      }
+
+      const advanceSimulation = () => {
+        runnerLib.advance(runnerState, 1)
+        console.log(runnerState)
+        const team = runnerState.team
+        drawCardsInQueue(team.readyQueue, readyQueue)
+        drawCardsInQueue(team.inProgressQueue, inProgressQueue)
+        drawCardsInQueue(team.completedStories, completedList)
+        updateAssignments(team.assigned)
+      }
+
+      const drawCardsInQueue = (queue, column) => {
+        queue.map(getCard).forEach(card => column.appendChild(card))
+      }
+
+      const updateAssignments = (assignments) => {
+        assignments.forEach(a => {
+          let card = getCard(a.story)
+          let assigned = card.getElementsByClassName('storyAssigned')[0]
+          assigned.innerHTML = a.devs.map(d => d.id).join(',')
+          let progress = card.getElementsByClassName('storyProgress')[0]
+          progress.innerHTML = buildStoryProgress(a.story)
+        })
+      }
+
+      const buildStoryProgress = (story) => {
+        return story.tasks.map(t => {
+          let percentComplete = Math.floor((t.duration - t.remaining) / t.duration * 100)
+          return `<div class="storyProgressBarOuter"><div class="storyProgressBarInner" style="width: ${percentComplete}%"></div></div>`
+        }).join('')
+      }
+
+      const getCard = (story) => {
+        let card = document.getElementById(story.id)
+        if (!card) {
+          card = document.createElement("div")
+          card.id = story.id
+          card.className = "card"
+          card.innerHTML = buildCardInnerHTML(story)
+        } 
+        return card
+      }
+
+      const buildCardInnerHTML = (story) => {
+        return `<div class="storyId">${story.id}</div>` +
+          `<div class="storyValue">${story.value}</div>` +
+          `<div class="storyAssigned"></div>` + 
+          `<div class="storyProgress"></div>`
+      }
+    </script>
+  </body>
+</html>

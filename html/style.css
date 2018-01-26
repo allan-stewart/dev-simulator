@@ -1,0 +1,38 @@
+#workspace {
+  position: relative;
+  display: block;
+  border: 1px solid black;
+  height: calc(100% - 50px)
+}
+
+.card {
+  display: block;
+  border: 1px solid green;
+  background-color: lightgreen;
+  width: 120px;
+  height: 75px;
+  animation: 10ms ease-in-out 1s slide;
+  padding: 5px;
+  margin: 5px;
+  float: left;
+  font-size: 9pt;
+}
+
+.queue {
+  display: block;
+  height: 100%;
+  width: 33%;
+  float: left;
+  border: 2px solid lightgray;
+}
+
+.storyProgressBarOuter {
+  background-color: black;
+  margin: 3px 0;
+}
+
+.storyProgressBarInner {
+  display: block;
+  height: 3px;
+  background-color: white;
+}
