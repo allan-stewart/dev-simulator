@@ -76,7 +76,7 @@ const performWork = (team) => {
  
     if (workRemaining == 0 || assignment.devs.length > 1) {
       let reviewRemaining = assignment.story.tasks[1].remaining
-      assignment.story.tasks[1].remaining = Math.max(0, reviewRemaining - 1)
+      assignment.story.tasks[1].remaining = Math.max(0, reviewRemaining - work)
     }
   })
 }
