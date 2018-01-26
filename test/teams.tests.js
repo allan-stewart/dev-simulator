@@ -102,6 +102,10 @@ describe('teams', () => {
           {story: stories[2], devs: [team.devs[2]]},
           {story: stories[3], devs: [team.devs[3]]}
         ])
+        assert.deepEqual(stories[0].tasks.map(x => x.devs), [[team.devs[0].id], []])
+        assert.deepEqual(stories[1].tasks.map(x => x.devs), [[team.devs[1].id], []])
+        assert.deepEqual(stories[2].tasks.map(x => x.devs), [[team.devs[2].id], []])
+        assert.deepEqual(stories[3].tasks.map(x => x.devs), [[team.devs[3].id], []])
       })
 
       it('should NOT pull work after hitting the inProgress wip limit', () => {
@@ -187,6 +191,32 @@ describe('teams', () => {
           {story: story2, devs: [team.devs[0]]},
           {story: story1, devs: [team.devs[1]]},
           {story: story3, devs: [team.devs[2]]}
+        ])
+      })
+
+      it('should not assign code review to the same developer', () => {
+        const config = configs.getStandardConfig(random)
+        config.devs.count = 1
+        const team = teams.initializeTeam(config, libs)
+        const story1 = createStoryWithPriority(1, team.config)
+        const story2 = createStoryWithPriority(2, team.config)
+        
+        teams.addStoryToReadyQueue(story1, team)
+        teams.addStoryToReadyQueue(story2, team)
+        teams.assignWork(team)
+
+        team.assigned = []
+        team.unassigned = [team.devs[0]]
+        story2.tasks[0].remaining = 0
+        story2.tasks[0].finished = true
+        story2.tasks[0].devs = [team.devs[0].id]
+        teams.assignWork(team)
+        
+        assert.deepEqual(team.readyQueue, [], 'ready queue was not empty')
+        assert.deepEqual(team.inProgressQueue, [story2, story1])
+        assert.deepEqual(team.unassigned, [])
+        assert.deepEqual(team.assigned, [
+          {story: story1, devs: [team.devs[0]]},
         ])
       })
     })
@@ -276,7 +306,8 @@ describe('teams', () => {
         story1.tasks[1].remaining = 1
         story2 = stories.newStory(config)
         story2.tasks[0].remaining = 0
-        story2.tasks[1].remaining = .7
+        story2.tasks[0].finished = true
+        story2.tasks[1].remaining = .001
         teams.addStoryToReadyQueue(story1, team)
         teams.addStoryToReadyQueue(story2, team)
         teams.assignWork(team)
@@ -296,7 +327,7 @@ describe('teams', () => {
       })
 
       it('should decrease story 2 code review remaining', () => {
-        assert(story2.tasks[1].remaining < 1)
+        assert(story2.tasks[1].remaining < .001)
       })
     })
 
@@ -382,7 +413,7 @@ describe('teams', () => {
   describe('processFinishedWork()', () => {
     let config, team, story1, story2
     
-    beforeEach(() => {
+    before(() => {
       config = configs.getStandardConfig(random)
       config.devs.collaboration = 'pair'
       config.devs.count = 5
@@ -390,14 +421,14 @@ describe('teams', () => {
       story1 = stories.newStory(config)
       story1.priority = 10
       story1.tasks[0].remaining = 0
-      story1.tasks[1].remaining = .01
+      story1.tasks[1].remaining = .001
       story2 = stories.newStory(config)
       story2.value = 2
       story2.priority = 5
       story2.tasks[0].remaining = 2
       story2.tasks[1].remaining = 1
       story3 = stories.newStory(config)
-      story3.value = 3
+      story3.value = 30
       story3.priority = 2
       story3.tasks[0].remaining = 0
       story3.tasks[1].remaining = 2
@@ -431,6 +462,10 @@ describe('teams', () => {
 
     it('should update the completed stories', () => {
       assert.deepEqual(team.completedStories, [story1])
+    })
+
+    it('should mark tasks as finished when the work remaining hits zero', () => {
+      assert.deepEqual(story1.tasks.map(x => x.finished), [true, true])
     })
   })
 })

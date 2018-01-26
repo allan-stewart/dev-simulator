@@ -6,8 +6,8 @@ const newStory = (config) => {
     id: 'story-' + config.stories.nextId++,
     value: config.random.randomInt(config.stories.minValue, config.stories.maxValue),
     tasks: [
-      {name: 'work', duration: workDuration, remaining: workDuration},
-      {name: 'code-review', duration: reviewDuration, remaining: reviewDuration}
+      {name: 'work', duration: workDuration, remaining: workDuration, devs: [], finished: false},
+      {name: 'code-review', duration: reviewDuration, remaining: reviewDuration, devs: [], finished: false}
     ]
   }
 

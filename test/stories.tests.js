@@ -24,8 +24,8 @@ describe('stories', () => {
       const workDuration = story.tasks[0].duration
       const expectedReviewDuration = workDuration * config.stories.codeReviewMultiplier
       assert.deepEqual(story.tasks, [
-        {name: 'work', duration: workDuration, remaining: workDuration},
-        {name: 'code-review', duration: expectedReviewDuration, remaining: expectedReviewDuration}
+        {name: 'work', duration: workDuration, remaining: workDuration, devs: [], finished: false},
+        {name: 'code-review', duration: expectedReviewDuration, remaining: expectedReviewDuration, devs: [], finished: false}
       ])
     })
 

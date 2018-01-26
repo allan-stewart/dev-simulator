@@ -36,14 +36,35 @@ const assignWork = (team) => {
 }
 
 const assignInProgressWork = (team) => {
-  const stories = team.inProgressQueue.filter(story => {
+  let stories = team.inProgressQueue.filter(story => {
     return !team.assigned.some(assignment => assignment.story == story)
   })
+  let unassignableDevs = []
   while (team.unassigned.length > 0 && stories.length > 0) {
     const devs = getDevsForAssignment(team)
-    const story = stories.shift()
-    team.assigned.push({story, devs})
+    const story = getNextAvailableStory(team, stories, devs)
+    if (story) {
+      stories = stories.filter(x => x != story)
+      const nextTask = getNextTaskForAssignment(story)
+      nextTask.devs = devs.map(x => x.id)
+      team.assigned.push({story, devs})
+    } else {
+      unassignableDevs = unassignableDevs.concat(devs)
+    }
   }
+  team.unassigned = team.unassigned.concat(unassignableDevs)
+}
+
+const getNextAvailableStory = (team, stories, devs) => {
+  if (team.config.devs.collaboration == 'solo') {
+    const dev = devs[0]
+    return stories.find(story => !story.tasks[0].devs.includes(dev.id))
+  }
+  return stories[0]
+}
+
+const getNextTaskForAssignment = (story) => {
+  return story.tasks.find(task => !task.finished)
 }
 
 const getDevsForAssignment = (team) => {
@@ -64,6 +85,8 @@ const pullWorkFromReadyQueue = (team) => {
     const story = team.readyQueue.shift()
     team.assigned.push({story, devs})
     team.libs.queues.addStoryToQueue(story, team.inProgressQueue)
+    const nextTask = getNextTaskForAssignment(story)
+    nextTask.devs = devs.map(x => x.id)
   }
 }
 
@@ -71,12 +94,12 @@ const performWork = (team) => {
   team.assigned.forEach(assignment => {
     let devMultipliers = assignment.devs.map(dev => getDevMultiplier(team.config.random))
     let work = Math.max(...devMultipliers)
-    let workRemaining = assignment.story.tasks[0].remaining
-    assignment.story.tasks[0].remaining = Math.max(0, workRemaining - work)
- 
-    if (workRemaining == 0 || assignment.devs.length > 1) {
-      let reviewRemaining = assignment.story.tasks[1].remaining
-      assignment.story.tasks[1].remaining = Math.max(0, reviewRemaining - work)
+    let task = assignment.story.tasks.find(x => !x.finished)
+    task.remaining = Math.max(0, task.remaining - work)
+
+    if (task.name != 'code-review' && assignment.devs.length > 1) {
+      task = assignment.story.tasks[1]
+      task.remaining = Math.max(0, task.remaining - work)
     }
   })
 }
@@ -87,15 +110,17 @@ const getDevMultiplier = (random) => {
 const processFinishedWork = (team) => {
   team.assigned.forEach(assignment => {
     team.libs.stories.updateStoryPriority(assignment.story)
-    if (!assignment.story.tasks.some(task => task.remaining > 0)) {
-      team.libs.queues.removeStoryFromQueue(assignment.story, team.inProgressQueue)
+    let shouldReassign = assignment.story.tasks.some(x => x.remaining <= 0 && !x.finished)
+    if (shouldReassign) {
       team.unassigned = team.unassigned.concat(assignment.devs)
       assignment.devs = []
-      team.completedStories.push(assignment.story)
     }
-    else if (assignment.story.tasks[0].remaining == 0) {
-      team.unassigned = team.unassigned.concat(assignment.devs)
-      assignment.devs = []
+
+    assignment.story.tasks.forEach(task => task.finished = task.remaining <= 0)
+
+    if (assignment.story.tasks.every(task => task.finished)) {
+      team.libs.queues.removeStoryFromQueue(assignment.story, team.inProgressQueue)
+      team.completedStories.push(assignment.story)
     }
   })
 
